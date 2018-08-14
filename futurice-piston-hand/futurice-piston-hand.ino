@@ -1,8 +1,8 @@
 // #### PINS ####
 // Pins for motor control
 int motorPin = 12;
-int disable = 13;
-int dirPin = 4;
+int disable = 13;     // activate so that the motor does not run when it is at idle state
+int dirPin = 4;       // dir = 0 for openning the hand, dir = 1 for closing the hand
 
 // Pin number for the activation button
 int button = 2;
@@ -10,12 +10,12 @@ int button = 2;
 // Pin numbers for the sensors and endstops
 int sensor1 = A1;
 int sensor2 = A2;
-int sensor3 = A3;
+
 int endstop = 8;
 int IRsensor = 7;
 
-int running = 0;
-bool grasp = true; // indicator if the hand is ready to grasp
+
+bool grasped = false; // indicator if the hand is running 
 
 // #### PARAMETERS ####
 // Min and max and position of motor (unused for now)
@@ -32,7 +32,8 @@ bool calibrated = false;
 double pressureThreshold = 750;
 
 bool dir = false;
-bool closed = false; // for tracking if claw is now closed or open.
+bool closed = false;      // for tracking if claw is now closed or open.
+bool idleState = false;   // The piston is at an offset position from the bottom.
 
 void setup() {
   // Init serial for debugging
@@ -76,8 +77,6 @@ bool readPressureSensors(){
   return true;
 }
 
-
-
 // Read the endstop status. Return false if piston should stop
 bool readEndStops(){
   if(!digitalRead(endstop) && !dir){
@@ -86,7 +85,7 @@ bool readEndStops(){
   return true;
 }
 
-// Start grasping if an object is detected by the IR sensor
+// Start grasping if an object is detected by the IR sensor. Return false if the piston should stop
 bool readIRSensor(){
   if (!digitalRead(IRsensor)){
     return true;
@@ -97,6 +96,7 @@ bool readIRSensor(){
 // Implement feedback here, return false if fingers should stop
 bool feedback(){
   if(!readPressureSensors() || !readEndStops()){   // TODO: add calls to other reading functions to statement as more sensors are added
+    grasped = 1;
     return false;
   }
   return true;
@@ -104,22 +104,40 @@ bool feedback(){
 
 // set stepper to (global variable pos)
 void move(){
-  if(dir){
+  if(dir && calibrated && pos < 3000){
+    // The piston runs to grasp the object
+    idleState = false;
+    pos += step;
+    digitalWrite(dirPin, HIGH);
+  }
+  else if(dir && calibrated && pos >= 3000 && pos < 3005){
+    idleState = true;
+    pos += step;
+  }
+  else if(dir && calibrated && pos > 3005){
+    idleState = false;
     pos += step;
     digitalWrite(dirPin, HIGH);
   }
   else if (!dir && !calibrated){
+    // The piston runs calibration
+    idleState = false;
+    grasped = false;
     pos -= step;
-     digitalWrite(dirPin, LOW);
+    digitalWrite(dirPin, LOW);
   }
   else if(!dir && calibrated){
+    // The piston runs to the offset position
     if (pos >=3000){
+      idleState = false;
+      grasped = false;
       pos -= step;
       digitalWrite(dirPin, LOW);
     }
     else{
       digitalWrite(disable,true);
-      running = 0;
+      idleState = true;
+      grasped = false;
     } 
   }
   
@@ -138,42 +156,54 @@ void calibrate(){
   pos = 0;
 }
 
+bool buttonPressed(){
+  if (digitalRead(button) == LOW){
+    if (dir == 1){
+      dir = 0;
+    }
+    else {
+      dir = 1;
+    }
+  }
+}
+
 // Control loop
 void loop() {
-  // Button pressed, try to grab or open
-    boolean IRs = readIRSensor();
-    if(digitalRead(button) == LOW){
-      if (dir == 1){
-        dir = 0;
-        move();
-        else {
-          dir = 1;
-        }
-      if(IRs){
+ 
+    // Detecting object
+    if(readIRSensor()){
       Serial.print("IR ");
-      Serial.print(IRs);
-      digitalWrite(disable,false);
-  
-  
-        // Close until at maximum position or until feedback says to stop
-        while(feedback() && readIRSensor()){
+      Serial.print(readIRSensor());
+      
+      dir = 1;
+      
+      // Close until at maximum position or until feedback says to stop
+      while(feedback() && readIRSensor() && !grasped){
+        idleState = false;
+        digitalWrite(disable,false);
+        move();
+      }
+
+      if (digitalRead(button) == LOW && grasped){
+        digitalWrite(disable,false);
+        dir = 0;
+        while(!idleState){
           move();
         }
       }
-//      else{
-//        dir = 0;
-//        while(feedback() ){
-//          move();
-//        }
-//      }
       digitalWrite(disable,true);
-      running = 0;
     }
     else {
-      dir = 0;
+      if (!dir){  
+        dir = 1;
+      }
+      else if (dir){ 
+        dir = 0;
+      }
       digitalWrite(disable,false);
-      running = 1;
-      while(!readIRSensor() && readEndStops()){
+      //Serial.println(dir);
+      Serial.println(pos);
+      while(!readIRSensor() && !idleState){
         move();
       }
       digitalWrite(disable,true);
