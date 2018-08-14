@@ -8,10 +8,10 @@ int dirPin = 4;       // dir = 0 for openning the hand, dir = 1 for closing the 
 int button = 2;
 
 // Pin numbers for the sensors and endstops
-int sensor1 = A1;
-int sensor2 = A2;
-
-int endstop = 8;
+int sensor1 = A1;     // pressure sensor
+int sensor2 = A2;     //pressure sensor
+  
+int endstop = 8;      
 int IRsensor = 7;
 
 
@@ -95,8 +95,11 @@ bool readIRSensor(){
 
 // Implement feedback here, return false if fingers should stop
 bool feedback(){
-  if(!readPressureSensors() || !readEndStops()){   // TODO: add calls to other reading functions to statement as more sensors are added
+  if(!readPressureSensors()){
     grasped = 1;
+    return false;
+  }
+  else if(!readEndStops()){   // TODO: add calls to other reading functions to statement as more sensors are added
     return false;
   }
   return true;
@@ -104,17 +107,20 @@ bool feedback(){
 
 // set stepper to (global variable pos)
 void move(){
+  
   if(dir && calibrated && pos < 3000){
-    // The piston runs to grasp the object
+    // The piston run to offset position
     idleState = false;
     pos += step;
     digitalWrite(dirPin, HIGH);
   }
   else if(dir && calibrated && pos >= 3000 && pos < 3005){
+    // The piston stop at the offset position
     idleState = true;
     pos += step;
   }
   else if(dir && calibrated && pos > 3005){
+    // The piston runs to grasp the object
     idleState = false;
     pos += step;
     digitalWrite(dirPin, HIGH);
@@ -156,17 +162,6 @@ void calibrate(){
   pos = 0;
 }
 
-bool buttonPressed(){
-  if (digitalRead(button) == LOW){
-    if (dir == 1){
-      dir = 0;
-    }
-    else {
-      dir = 1;
-    }
-  }
-}
-
 // Control loop
 void loop() {
  
@@ -177,13 +172,14 @@ void loop() {
       
       dir = 1;
       
-      // Close until at maximum position or until feedback says to stop
+      // If an object presnts, the piston closes until at maximum position or until feedback says to stop
       while(feedback() && readIRSensor() && !grasped){
         idleState = false;
         digitalWrite(disable,false);
         move();
       }
 
+      // When the object is already grasped, press the button to release the fingers.
       if (digitalRead(button) == LOW && grasped){
         digitalWrite(disable,false);
         dir = 0;
@@ -194,6 +190,7 @@ void loop() {
       digitalWrite(disable,true);
     }
     else {
+      // Change the direction to move to offset position
       if (!dir){  
         dir = 1;
       }
@@ -201,8 +198,8 @@ void loop() {
         dir = 0;
       }
       digitalWrite(disable,false);
-      //Serial.println(dir);
-      Serial.println(pos);
+      
+      // Move the piston to the offset position when there is no object or when the button is pressed to release the fingers
       while(!readIRSensor() && !idleState){
         move();
       }
