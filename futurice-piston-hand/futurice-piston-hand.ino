@@ -149,7 +149,9 @@ void move(){
   
   for(int i = 0; i <= step ; i++){
     digitalWrite(motorPin, HIGH);
+
     delay(wait);
+
     digitalWrite(motorPin, LOW);
   }
 }
@@ -159,6 +161,7 @@ void calibrate(){
   while(readEndStops()){
         move();
   }
+  delay(1000);
   pos = 0;
 }
 
