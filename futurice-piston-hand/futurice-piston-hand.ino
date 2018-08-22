@@ -159,6 +159,8 @@ void move(){
 void calibrate(){
   dir = false;
   while(readEndStops()){
+    Serial.print("read end stop");
+    Serial.println(readEndStops());
         move();
   }
   delay(1000);
@@ -167,7 +169,8 @@ void calibrate(){
 
 // Control loop
 void loop() {
- 
+    
+    
     // Detecting object
     if(readIRSensor()){
       Serial.print("IR ");
