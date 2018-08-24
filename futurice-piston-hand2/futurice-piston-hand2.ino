@@ -19,9 +19,8 @@ bool grasped = false; // indicator if the hand is running
 
 // #### PARAMETERS ####
 // Min and max and position of motor (unused for now)
-unsigned int min = 0;
-unsigned int max = 10000;
-unsigned int calibratedPos = 3000;
+int min = 0;
+int max = 9500;
 int pos = 0;
 
 // Step size and delay. Increase step and/or lower delay for faster movement.
@@ -30,7 +29,7 @@ int wait = 2;
 bool calibrated = false;
 
 // Pressure sensor threshold (in newtons) 
-double pressureThreshold = 500;
+double pressureThreshold = 750;
 
 bool dir = false;
 bool closed = false;      // for tracking if claw is now closed or open.
@@ -109,18 +108,18 @@ bool feedback(){
 // set stepper to (global variable pos)
 void move(){
   
-  if(dir && calibrated && pos < calibratedPos){
+  if(dir && calibrated && pos < 3000){
     // The piston run to offset position
     idleState = false;
     pos += step;
     digitalWrite(dirPin, HIGH);
   }
-  else if(dir && calibrated && pos >= calibratedPos && pos < (calibratedPos + 5)){
+  else if(dir && calibrated && pos >= 3000 && pos < 3005){
     // The piston stop at the offset position
     idleState = true;
     pos += step;
   }
-  else if(dir && calibrated && pos > (calibratedPos + 5) && pos < max){
+  else if(dir && calibrated && pos > 3005){
     // The piston runs to grasp the object
     idleState = false;
     pos += step;
@@ -149,26 +148,25 @@ void move(){
   }
   
   for(int i = 0; i <= step ; i++){
-    analogWrite(motorPin, 254);
-//    digitalWrite(motorPin, HIGH);
-//
-//    delay(wait);
-//
-//    digitalWrite(motorPin, LOW);
+    digitalWrite(motorPin, HIGH);
+
+    delay(wait);
+
+    digitalWrite(motorPin, LOW);
   }
+//  Serial.print("Pos: "+String(pos)+"\n");
 }
 
 void calibrate(){
   dir = false;
   while(readEndStops()){
-    Serial.print("read end stop");
-    Serial.println(readEndStops());
+ //   Serial.print("read end stop");
+ //   Serial.println(readEndStops());
         move();
   }
   delay(1000);
   pos = 0;
 }
-
 
 bool checkpos(){
   if(pos < max){
@@ -184,13 +182,13 @@ void loop() {
     
     // Detecting object
     if(readIRSensor()){
-      Serial.print("IR ");
-      Serial.print(readIRSensor());
+//      Serial.print("IR ");
+//      Serial.print(readIRSensor());
       
       dir = 1;
       
       // If an object presnts, the piston closes until at maximum position or until feedback says to stop
-      while(feedback() && readIRSensor() && !grasped){
+      while(feedback() && readIRSensor() && !grasped && checkpos()){
         idleState = false;
         digitalWrite(disable,false);
         move();
@@ -198,7 +196,6 @@ void loop() {
 
       // When the object is already grasped, press the button to release the fingers.
       if (digitalRead(button) == LOW && grasped){
-        digitalWrite(disable,false);
 
         // CRUSH CODE
         for(int i = 0; !digitalRead(button) ; i++){
@@ -210,22 +207,18 @@ void loop() {
             digitalWrite(disable,false);
             Serial.print("Crushing...\n");
             while(checkpos() && digitalRead(button)){
-              digitalWrite(disable,false);
               move();
             }
-            
             Serial.print("Object crushed!\n");
             while(digitalRead(button)){ /* DO NOTHING */}
             break;
           }
-          
         }
-        digitalWrite(disable,true);
         // END OF CRUSH CODE
-
+        
+        digitalWrite(disable,false);
         dir = 0;
         while(!idleState){
-          digitalWrite(disable,false);
           move();
         }
       }
