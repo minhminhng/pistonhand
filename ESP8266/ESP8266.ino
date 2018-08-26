@@ -96,7 +96,7 @@ void encodeToJSON(){
 void setup() {
   //pinMode(BUILTIN_LED, OUTPUT);       // Initialize the BUILTIN_LED pin as an output
   Serial.begin(115200);                 // Initialize serial data for monitoring
-  Wire.begin(0,2);                      // Initialize i2c connection Wite.begin(int sda, int sck), ESP8266 only functions as master
+  Wire.begin(0,2);                      // Initialize i2c connection Wire.begin(int sda, int scl), ESP8266 only functions as master
   Wire.setClockStretchLimit(40000);     // Increase the waiting time to solve problem of 
                                         // slow Arduino 
                                         // https://forum.arduino.cc/index.php?topic=336543.0
