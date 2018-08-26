@@ -17,6 +17,7 @@ using the following [connections].
   SDA |  GPIO0
   SCL |  GPIO2
   GND |  GND
+  
 For observing the ESP8266, serial of another Arduino board can be used and connected as 
 
   Uno  |  ESP  
@@ -24,6 +25,7 @@ For observing the ESP8266, serial of another Arduino board can be used and conne
   Tx   |  Tx
   Rx   |  Rx
   Reset - GND |
+  
  The reset pin of the second Arduino is connected to ground to bypass the bootloader of 
  the ATM328P and using USB port of the ATM16U2 on the board. 
  More information can be found at <https://tttapa.github.io/Pages/Arduino/ESP8266/Flashing/Flashing-With-an-Arduino.html>.
