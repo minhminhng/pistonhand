@@ -36,17 +36,14 @@ More information can be found at https://tttapa.github.io/Pages/Arduino/ESP8266/
 #include <ArduinoJson.h>
 
 // Network parameters
-//const char* ssid = "MinhN";
-//const char* password = "Minna123";
-const char* ssid = "aalto open";
-const char* password = "";
+const char* ssid = "<your_network_name>";
+const char* password = "<your_network_password>";
 
 // MQTT service
-//const char* mqtt_server = "192.168.0.103";
 const char* mqtt_server = "10.100.31.1";
 
-const char* mqtt_user = "minhminh";
-const char* mqtt_password = "mosquitto";
+const char* mqtt_user = "<mqtt_server>";
+const char* mqtt_password = "<mqtt_password>";
 
 // Wifi communication
 WiFiClient espClient;
