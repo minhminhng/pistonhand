@@ -12,7 +12,7 @@ In this project, wifi module ESP8266-01 module is used.
 I2C connection between Arduino and ESP8266 can be established 
 using the following [connections].
 
- Uno  |  ESP  
+ Uno  |  ESP8266-01  
 :---: | :---: 
   SDA |  GPIO0
   SCL |  GPIO2
@@ -20,7 +20,7 @@ using the following [connections].
   
 For observing the ESP8266, serial of another Arduino board can be used and connected as 
 
-  Uno  |  ESP  
+  Uno  |  ESP8266-01 
 :---:  | :---: 
   Tx   |  Tx
   Rx   |  Rx
@@ -77,7 +77,7 @@ A common problem of I2C communication is Arduino is slower than ESP8266.
 When data is send as a single byte, the problem is almost unnoticeable. 
 However, when a large number of bytes are sent, they can be come junk. 
 The following steps can be used to solve the problem. 
-Firstly, increase the waiting time of ESL8266v
+Firstly, increase the waiting time of ESP8266
 ```
  Wire.setClockStretchLimit(40000);     // Increase the waiting time to solve problem of
 ```
