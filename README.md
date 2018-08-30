@@ -1,5 +1,8 @@
 # PISTON HAND
 The detail of the project can be found at <http://protopaja.aalto.fi/protopaja-2018/futurice-2018/>. 
+The documentation in the link includes the necessary files to rebuild another hand. 
+This repository contains a branch with additional Wifi communication 
+feature of the project.
 
 A robot hand with three finger for grasping objects.
 The hand includes two pressure sensors on two of the fingers, 
